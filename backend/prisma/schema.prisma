@@ -1,0 +1,312 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String          @id @default(cuid())
+  name            String
+  email           String          @unique
+  password        String
+  profileImage    String?
+  role            Role            @default(AGENT)
+  isActive        Boolean         @default(true)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  leads           Lead[]          @relation("AssignedAgent")
+  followUps       FollowUp[]      @relation("FollowUpAgent")
+  communications  Communication[] @relation("CommunicationCreator")
+  activities      Activity[]      @relation("UserActivities")
+  properties      Property[]      @relation("PropertyOwnerAgent")
+  clients         Client[]        @relation("ClientAssignedAgent")
+  clientActivities ClientActivity[] @relation("ClientActivityActor")
+  deals           Deal[]          @relation("DealAssignedAgent")
+  dealActivities  DealActivity[]  @relation("DealActivityActor")
+  tenantSettingsUpdates TenantSettings[] @relation("TenantSettingsUpdatedBy")
+
+  @@map("users")
+}
+
+/// Singleton tenant-wide settings. There is exactly one row with id="default"
+/// that is upserted on first read. ADMIN-only writes.
+///
+/// `autoAssignLeadsEnabled` and `agentVisibilityMode` are persisted but are
+/// NOT yet wired into the Leads workflow — the UI labels them
+/// "Saved — activation in future workflow phase" so the behaviour is honest.
+model TenantSettings {
+  id                     String   @id @default("default")
+  autoAssignLeadsEnabled Boolean  @default(false)
+  /// "OWN_ONLY" — agents see only their assigned leads (default, matches today)
+  /// "ALL"      — agents see all leads (admin-style visibility)
+  agentVisibilityMode    String   @default("OWN_ONLY")
+  updatedById            String?
+  updatedBy              User?    @relation("TenantSettingsUpdatedBy", fields: [updatedById], references: [id])
+  updatedAt              DateTime @updatedAt
+
+  @@map("tenant_settings")
+}
+
+model Property {
+  id            String         @id @default(cuid())
+  title         String
+  propertyType  String
+  location      String
+  city          String
+  price         Decimal        @db.Decimal(15, 2)
+  area          Float
+  areaUnit      AreaUnit       @default(SQFT)
+  bedrooms      Int?
+  bathrooms     Int?
+  status        PropertyStatus @default(AVAILABLE)
+  description   String?        @db.Text
+  images        String[]
+  ownerAgentId  String?
+  ownerAgent    User?          @relation("PropertyOwnerAgent", fields: [ownerAgentId], references: [id])
+  deals         Deal[]         @relation("PropertyDeals")
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@index([status, createdAt])
+  @@index([city])
+  @@index([propertyType])
+  @@index([ownerAgentId])
+  @@map("properties")
+}
+
+enum PropertyStatus {
+  AVAILABLE
+  SOLD
+  RESERVED
+}
+
+enum AreaUnit {
+  SQFT
+  SQM
+}
+
+model Client {
+  id                String           @id @default(cuid())
+  fullName          String
+  phone             String?
+  email             String?
+  budget            Decimal?         @db.Decimal(15, 2)
+  preferredLocation String?
+  notes             String?          @db.Text
+  linkedLeadId      String?
+  linkedLead        Lead?            @relation("LeadClients", fields: [linkedLeadId], references: [id], onDelete: SetNull)
+  assignedAgentId   String?
+  assignedAgent     User?            @relation("ClientAssignedAgent", fields: [assignedAgentId], references: [id])
+  activities        ClientActivity[] @relation("ClientToActivities")
+  deals             Deal[]           @relation("ClientDeals")
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  @@index([assignedAgentId, createdAt])
+  @@index([linkedLeadId])
+  @@map("clients")
+}
+
+/// Auto-logged lifecycle events for the Clients module. Kept in its own
+/// table so the Communication/Activity tables stay untouched.
+///   action: CREATED | UPDATED | LINKED_LEAD | UNLINKED_LEAD |
+///           AGENT_ASSIGNED | AGENT_UNASSIGNED | NOTES_UPDATED | DELETED
+model ClientActivity {
+  id          String   @id @default(cuid())
+  clientId    String
+  client      Client   @relation("ClientToActivities", fields: [clientId], references: [id], onDelete: Cascade)
+  userId      String?
+  user        User?    @relation("ClientActivityActor", fields: [userId], references: [id])
+  action      String
+  description String   @db.Text
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  @@index([clientId, createdAt])
+  @@map("client_activities")
+}
+
+model Lead {
+  id                String     @id @default(cuid())
+  fullName          String
+  phone             String?
+  email             String?
+  budget            Decimal?   @db.Decimal(15, 2)
+  preferredLocation String?
+  bhk               String?
+  propertyType      String?
+  status            LeadStatus @default(NEW)
+  source            LeadSource @default(MANUAL)
+  tags              String[]
+  notes             String?    @db.Text
+  assignedAgentId   String?
+  assignedAgent     User?      @relation("AssignedAgent", fields: [assignedAgentId], references: [id])
+  followUps         FollowUp[] @relation("LeadFollowUps")
+  communications    Communication[] @relation("LeadCommunications")
+  activities        Activity[] @relation("LeadActivities")
+  clients           Client[]   @relation("LeadClients")
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+
+  @@map("leads")
+}
+
+model FollowUp {
+  id              String         @id @default(cuid())
+  leadId          String
+  lead            Lead           @relation("LeadFollowUps", fields: [leadId], references: [id], onDelete: Cascade)
+  assignedAgentId String
+  assignedAgent   User           @relation("FollowUpAgent", fields: [assignedAgentId], references: [id])
+  followUpDate    DateTime
+  reminderDate    DateTime?
+  status          FollowUpStatus @default(PENDING)
+  notes           String?        @db.Text
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@index([assignedAgentId, followUpDate])
+  @@index([leadId])
+  @@index([status, followUpDate])
+  @@map("follow_ups")
+}
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  AGENT
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  NEGOTIATING
+  WON
+  LOST
+}
+
+enum FollowUpStatus {
+  PENDING
+  COMPLETED
+  MISSED
+}
+
+enum LeadSource {
+  FACEBOOK
+  WHATSAPP
+  WEBSITE
+  REFERRAL
+  MANUAL
+  PROPERTY_PORTAL
+  OTHER
+}
+
+model Communication {
+  id                String                  @id @default(cuid())
+  leadId            String
+  lead              Lead                    @relation("LeadCommunications", fields: [leadId], references: [id], onDelete: Cascade)
+  type              CommunicationType
+  direction         CommunicationDirection?
+  message           String?                 @db.Text
+  templateName      String?
+  templateLang      String?
+  templateParams    Json?
+  callDuration      Int?
+  callOutcome       String?
+  status            String                  @default("PENDING")
+  whatsappMessageId String?                 @unique
+  errorCode         Int?
+  errorDetail       String?                 @db.Text
+  createdById       String?
+  createdBy         User?                   @relation("CommunicationCreator", fields: [createdById], references: [id])
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
+
+  @@index([leadId, createdAt])
+  @@index([type, createdAt])
+  @@map("communications")
+}
+
+model Activity {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation("UserActivities", fields: [userId], references: [id])
+  leadId      String?
+  lead        Lead?    @relation("LeadActivities", fields: [leadId], references: [id], onDelete: SetNull)
+  action      String
+  description String   @db.Text
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([userId, createdAt])
+  @@index([leadId, createdAt])
+  @@map("activities")
+}
+
+enum CommunicationType {
+  WHATSAPP
+  CALL
+}
+
+enum CommunicationDirection {
+  INBOUND
+  OUTBOUND
+}
+
+
+model Deal {
+  id                  String     @id @default(cuid())
+  title               String
+  propertyId          String
+  property            Property   @relation("PropertyDeals", fields: [propertyId], references: [id], onDelete: Restrict)
+  clientId            String
+  client              Client     @relation("ClientDeals", fields: [clientId], references: [id], onDelete: Restrict)
+  assignedAgentId     String
+  assignedAgent       User       @relation("DealAssignedAgent", fields: [assignedAgentId], references: [id])
+  amount              Decimal    @db.Decimal(15, 2)
+  expectedClosingDate DateTime?
+  status              DealStatus @default(NEW)
+  notes               String?    @db.Text
+  activities          DealActivity[] @relation("DealToActivities")
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+
+  @@index([status, createdAt])
+  @@index([assignedAgentId])
+  @@index([propertyId])
+  @@index([clientId])
+  @@map("deals")
+}
+
+/// Auto-logged lifecycle events for the Deals module.
+///   eventType: CREATED | STATUS_CHANGED | AMOUNT_UPDATED |
+///              AGENT_REASSIGNED | NOTES_UPDATED
+/// `notes` carries the human-readable description (e.g. "Status changed from
+/// NEW to NEGOTIATION"). `userId` is the acting user, kept optional so a
+/// deleted/system actor doesn't break the timeline.
+model DealActivity {
+  id        String   @id @default(cuid())
+  dealId    String
+  deal      Deal     @relation("DealToActivities", fields: [dealId], references: [id], onDelete: Cascade)
+  userId    String?
+  user      User?    @relation("DealActivityActor", fields: [userId], references: [id])
+  eventType String
+  notes     String?  @db.Text
+  createdAt DateTime @default(now())
+
+  @@index([dealId, createdAt])
+  @@map("deal_activities")
+}
+
+enum DealStatus {
+  NEW
+  NEGOTIATION
+  DOCUMENTATION
+  PAYMENT_PENDING
+  WON
+  LOST
+}

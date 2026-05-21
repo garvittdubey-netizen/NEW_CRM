@@ -1,0 +1,103 @@
+{
+  "theme": "Light with Auto Dark Mode Support",
+  "archetype": "Archetype 4: Swiss & High-Contrast (Specialized for Enterprise SaaS / Old Money Tech)",
+  "emotion_and_tone": "Authority, clarity, trust, and professional efficiency. High-end functional.",
+  "typography": {
+    "font_family": {
+      "heading": "Outfit",
+      "body": "IBM Plex Sans",
+      "mono": "IBM Plex Mono"
+    },
+    "installation": "npm install @fontsource/outfit @fontsource/ibm-plex-sans @fontsource/ibm-plex-mono",
+    "hierarchy": {
+      "h1": "text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight",
+      "h2": "text-2xl sm:text-3xl font-medium tracking-tight",
+      "h3": "text-xl sm:text-2xl font-medium",
+      "h4": "text-lg sm:text-xl font-medium",
+      "body": "text-base leading-relaxed",
+      "small_labels": "text-xs font-semibold uppercase tracking-[0.2em]"
+    }
+  },
+  "colors": {
+    "light": {
+      "primary": "#1E3A5F",
+      "primary_hover": "#162B46",
+      "primary_foreground": "#FFFFFF",
+      "background": "#F8FAFC",
+      "surface": "#FFFFFF",
+      "border": "rgba(148, 163, 184, 0.4)",
+      "text": "#0F172A",
+      "muted": "#64748B",
+      "accent": "#F1F5F9"
+    },
+    "dark": {
+      "primary": "#3B82F6",
+      "primary_hover": "#60A5FA",
+      "primary_foreground": "#FFFFFF",
+      "background": "#020617",
+      "surface": "#0F172A",
+      "border": "rgba(51, 65, 85, 0.6)",
+      "text": "#F8FAFC",
+      "muted": "#94A3B8",
+      "accent": "#1E293B"
+    },
+    "rules": [
+      "No generic full-screen gradients.",
+      "Never use pure black or pure gray; always tint grays with the primary blue (use Tailwind's Slate palette).",
+      "Primary CTA buttons must be Navy (#1E3A5F) in light mode, and a highly visible Blue (#3B82F6) in dark mode for contrast."
+    ]
+  },
+  "layout_and_spacing": {
+    "philosophy": "Control Room Grid for the Dashboard. Dense data correlation, scanability, and high structural integrity.",
+    "dashboard_grid": "Base Grid: grid-cols-1 md:grid-cols-3 lg:grid-cols-4. Tight gap strategy (gap-4 or gap-6).",
+    "spacing_scale": "Use p-6 or p-8 for main containers and cards to give breathing room. Avoid claustrophobic padding (p-2/p-4) on major widgets.",
+    "alignment": "Optical alignment over geometrical. Left-align dense content and forms. Header and top navbar elements should align vertically to their containers.",
+    "sidebar": "Fixed width 260px (w-[260px]), solid background matching the 'surface' color, sharp right border."
+  },
+  "surface_strategies": {
+    "dashboard_cards": "Neumorphism 'Clay & Crisp' variant. Flat background (matches parent exactly), 1px sharp border to ground it, and soft shadow (shadow-sm). Do not use heavy Vercel-style glowing shadows.",
+    "radius": "Subtle roundness. Use max 8px (rounded-md or rounded-lg). No pill-shaped cards.",
+    "navbar": "Glassmorphism for top nav if content scrolls under it. backdrop-blur-md, bg-surface/80 opacity, 1px delicate bottom border."
+  },
+  "component_rules": {
+    "buttons": "Standard Shadcn components modified for sharp edges (rounded-md). Always explicitly set hover text color (e.g., hover:bg-slate-900 hover:text-white).",
+    "inputs_and_forms": "Use Shadcn Input, Select, Checkbox. 1px border. Focus state must have high contrast (focus:ring-2 focus:ring-primary).",
+    "tables": "Use Shadcn tables for data grids. Left-align columns unless numerical. Use subtle row borders (border-b border-border/40).",
+    "icons": "Use lucide-react (default with Shadcn) for consistency. Keep stroke-width consistent (1.5 or 2)."
+  },
+  "media": {
+    "image_urls": [
+      {
+        "category": "property_thumbnail_1",
+        "url": "https://images.unsplash.com/photo-1613490493576-7fde63acd811?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Njd8MHwxfHNlYXJjaHwxfHxsdXh1cnklMjByZWFsJTIwZXN0YXRlJTIwZXh0ZXJpb3IlMjBtb2Rlcm58ZW58MHx8fHwxNzc5MTg4NDAzfDA&ixlib=rb-4.1.0&q=85",
+        "description": "Modern luxury concrete building exterior"
+      },
+      {
+        "category": "property_thumbnail_2",
+        "url": "https://images.unsplash.com/photo-1628744448839-a475cc0e90c3?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Njd8MHwxfHNlYXJjaHwzfHxsdXh1cnklMjByZWFsJTIwZXN0YXRlJTIwZXh0ZXJpb3IlMjBtb2Rlcm58ZW58MHx8fHwxNzc5MTg4NDAzfDA&ixlib=rb-4.1.0&q=85",
+        "description": "White and brown wooden house exterior"
+      },
+      {
+        "category": "user_avatar_1",
+        "url": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzB8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjBoZWFkc2hvdCUyMGJ1c2luZXNzJTIwcG9ydHJhaXR8ZW58MHx8fHwxNzc5MTg4NDA5fDA&ixlib=rb-4.1.0&q=85",
+        "description": "Professional woman headshot"
+      },
+      {
+        "category": "user_avatar_2",
+        "url": "https://images.unsplash.com/photo-1685760259914-ee8d2c92d2e0?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzB8MHwxfHNlYXJjaHwyfHxwcm9mZXNzaW9uYWwlMjBoZWFkc2hvdCUyMGJ1c2luZXNzJTIwcG9ydHJhaXR8ZW58MHx8fHwxNzc5MTg4NDA5fDA&ixlib=rb-4.1.0&q=85",
+        "description": "Professional portrait for agent/admin"
+      }
+    ],
+    "rules": "Never use placeholder image services. Use only the provided Unsplash URLs."
+  },
+  "instructions_to_main_agent": [
+    "Strictly follow the color palette provided in the guidelines. Update Tailwind config to reflect these exact HEX values for primary and background.",
+    "Implement light and dark mode automatically using next-themes or Tailwind's dark class toggle, ensuring all surfaces and texts map to the defined tokens.",
+    "Customize Shadcn UI components (especially Cards, Buttons, and Inputs) to match the 'Clay & Crisp' surface strategy and rounded-md radius.",
+    "Set up the dashboard grid using the Control Room strategy: dense layout, full-height widgets, utilizing every pixel efficiently.",
+    "Implement the Collapsible Sidebar Navigation and Top Navbar ensuring responsive behavior (hamburger on mobile, fixed width on desktop).",
+    "Add 'data-testid' attributes to all interactive elements, navigation links, and major content blocks for automated testing.",
+    "Implement the Login Page with a split-screen design. Left side: Login form (clean, white background). Right side: Immersive luxury real estate exterior image (use property_thumbnail_1) with an overlay (bg-black/40).",
+    "Structure standard routes (Login, Dashboard, Settings) with React Router, ensuring protected route logic is stubbed out for Admin/Agent roles."
+  ]
+}
